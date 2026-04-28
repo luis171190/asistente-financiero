@@ -14,20 +14,27 @@
 SET search_path TO finanzas_personales;
 
 -- ─── 0. GRANTS (CRITICO) ──────────────────────────────────────────────
--- El rol que usa n8n necesita permisos INSERT/UPDATE/DELETE en las
--- tablas nuevas y SELECT en las vistas. Sin esto el AI Agent y la API
--- Dashboard no pueden escribir/leer los servicios.
--- Ajustar 'postgres' por el rol real que usa n8n si es distinto.
-DO $$
-DECLARE
-  rol TEXT := 'postgres';  -- cambiar si el rol de n8n es otro (ej: anon, authenticator)
-BEGIN
-  EXECUTE format('GRANT USAGE ON SCHEMA finanzas_personales TO %I', rol);
-  EXECUTE format('GRANT SELECT, INSERT, UPDATE, DELETE ON ALL TABLES IN SCHEMA finanzas_personales TO %I', rol);
-  EXECUTE format('GRANT USAGE, SELECT ON ALL SEQUENCES IN SCHEMA finanzas_personales TO %I', rol);
-  EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA finanzas_personales GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO %I', rol);
-  EXECUTE format('ALTER DEFAULT PRIVILEGES IN SCHEMA finanzas_personales GRANT USAGE, SELECT ON SEQUENCES TO %I', rol);
-END $$;
+-- Roles estandar de Supabase self-hosted que pueden estar siendo usados
+-- por n8n: postgres, authenticated, service_role.
+-- Aplicamos GRANT a los 3 para cubrir todas las posibilidades.
+-- (anon NO incluido a proposito: no debe escribir en finanzas_personales).
+
+GRANT USAGE ON SCHEMA finanzas_personales TO postgres, authenticated, service_role;
+
+GRANT SELECT, INSERT, UPDATE, DELETE
+  ON ALL TABLES IN SCHEMA finanzas_personales
+  TO postgres, authenticated, service_role;
+
+GRANT USAGE, SELECT
+  ON ALL SEQUENCES IN SCHEMA finanzas_personales
+  TO postgres, authenticated, service_role;
+
+-- Privilegios por defecto para tablas/sequences que se creen en el futuro
+ALTER DEFAULT PRIVILEGES IN SCHEMA finanzas_personales
+  GRANT SELECT, INSERT, UPDATE, DELETE ON TABLES TO postgres, authenticated, service_role;
+
+ALTER DEFAULT PRIVILEGES IN SCHEMA finanzas_personales
+  GRANT USAGE, SELECT ON SEQUENCES TO postgres, authenticated, service_role;
 
 -- ─── 1. MIGRAR 2 SERVICIOS A servicios_recurrentes ───────────────────
 
