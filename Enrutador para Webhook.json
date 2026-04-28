@@ -1,5 +1,7 @@
 {
+  "id": "tdjSWrSplaOfsfO4",
   "name": "Enrutador para Webhook",
+  "active": true,
   "nodes": [
     {
       "parameters": {
@@ -9,10 +11,7 @@
       },
       "type": "n8n-nodes-base.webhook",
       "typeVersion": 2.1,
-      "position": [
-        -64,
-        272
-      ],
+      "position": [-64, 272],
       "id": "3c38cb3e-8572-401a-ba39-558ea266146b",
       "name": "Router Evolution API",
       "webhookId": "router-wa"
@@ -43,10 +42,7 @@
       },
       "type": "n8n-nodes-base.if",
       "typeVersion": 2.2,
-      "position": [
-        160,
-        272
-      ],
+      "position": [160, 272],
       "id": "715109d0-04eb-41f3-add0-de0deb651fba",
       "name": "¿Es Luis?"
     },
@@ -61,10 +57,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        384,
-        176
-      ],
+      "position": [384, 176],
       "id": "089b16e3-efa4-4d43-91e7-86882adc7ccc",
       "name": "→ Asistente Financiero"
     },
@@ -79,10 +72,7 @@
       },
       "type": "n8n-nodes-base.httpRequest",
       "typeVersion": 4.2,
-      "position": [
-        384,
-        384
-      ],
+      "position": [384, 384],
       "id": "5b0daf88-69bd-4bf2-8d28-eefca81a005f",
       "name": "→ Somos"
     },
@@ -94,57 +84,34 @@
         "color": 6
       },
       "type": "n8n-nodes-base.stickyNote",
-      "position": [
-        -96,
-        -128
-      ],
+      "position": [-96, -128],
       "typeVersion": 1,
       "id": "8aa05628-9d5c-464f-a475-19e4d7ccad52",
       "name": "Info1"
     }
   ],
-  "pinData": {},
   "connections": {
     "Router Evolution API": {
       "main": [
-        [
-          {
-            "node": "¿Es Luis?",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "¿Es Luis?", "type": "main", "index": 0 }]
       ]
     },
     "¿Es Luis?": {
       "main": [
-        [
-          {
-            "node": "→ Asistente Financiero",
-            "type": "main",
-            "index": 0
-          }
-        ],
-        [
-          {
-            "node": "→ Somos",
-            "type": "main",
-            "index": 0
-          }
-        ]
+        [{ "node": "→ Asistente Financiero", "type": "main", "index": 0 }],
+        [{ "node": "→ Somos", "type": "main", "index": 0 }]
       ]
     }
   },
-  "active": true,
   "settings": {
     "executionOrder": "v1",
     "binaryMode": "separate",
-    "availableInMCP": false
+    "availableInMCP": true
   },
+  "pinData": {},
   "versionId": "131922d0-ff61-4aa9-ae23-3f018927f482",
-  "meta": {
-    "instanceId": "3b42fd32e6f340260e7c3102f964d10a6ec4faa1c313419e6f443ee442339754"
-  },
-  "id": "tdjSWrSplaOfsfO4",
-  "tags": []
+  "_meta": {
+    "exportedAt": "2026-04-20",
+    "n8nVersion": "ssn8n.myaivaro.com"
+  }
 }

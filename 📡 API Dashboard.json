@@ -1,0 +1,94 @@
+{
+  "id": "E0AwewlJN2GKMDzF",
+  "name": "📡 API Dashboard",
+  "active": true,
+  "nodes": [
+    {
+      "id": "wh-dash",
+      "name": "Webhook",
+      "type": "n8n-nodes-base.webhook",
+      "typeVersion": 2,
+      "position": [250, 300],
+      "parameters": {
+        "httpMethod": "GET",
+        "path": "dash-data",
+        "responseMode": "responseNode",
+        "responseData": "firstEntryJson",
+        "options": {
+          "allowedOrigins": "*",
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Access-Control-Allow-Methods", "value": "GET, OPTIONS" },
+              { "name": "Cache-Control", "value": "no-cache" }
+            ]
+          }
+        }
+      },
+      "webhookId": "d68e3cec-2b57-4052-8673-c4fb58e61fb5"
+    },
+    {
+      "id": "pg-dash",
+      "name": "Query Dashboard",
+      "type": "n8n-nodes-base.postgres",
+      "typeVersion": 2.6,
+      "position": [500, 300],
+      "parameters": {
+        "operation": "executeQuery",
+        "query": "SELECT\n  pm.anio_mes, pm.ingreso_total_usd, pm.ingreso_total_ars, pm.tipo_cambio,\n  pm.presupuesto_necesidades, pm.presupuesto_deseos, pm.presupuesto_ahorro,\n  pm.gastado_necesidades, pm.gastado_deseos, pm.ahorro_real,\n  pm.compromisos_tc, pm.disponible_para_gastar,\n  (SELECT json_agg(json_build_object('nombre', tb.nombre, 'saldo', b.saldo_actual, 'moneda', b.moneda))\n   FROM finanzas_personales.billeteras b JOIN finanzas_personales.tipos_billetera tb ON tb.id = b.tipo_billetera_id) AS billeteras,\n  (SELECT dolar_blue FROM finanzas_personales.tipo_cambio ORDER BY fecha DESC LIMIT 1) AS tc_blue,\n  (SELECT fecha FROM finanzas_personales.tipo_cambio ORDER BY fecha DESC LIMIT 1) AS tc_fecha,\n  (SELECT json_agg(g ORDER BY (g->>'creado_en') DESC)\n   FROM (SELECT json_build_object('fecha', gv.fecha, 'desc', gv.descripcion, 'monto', gv.monto, 'categoria', cg.nombre, 'metodo', gv.metodo_pago, 'creado_en', gv.creado_en) AS g\n         FROM finanzas_personales.gastos_variables gv\n         JOIN finanzas_personales.categorias_gasto cg ON gv.categoria_id = cg.id\n         ORDER BY gv.creado_en DESC LIMIT 5) t) AS ultimos_gastos,\n  (SELECT json_agg(json_build_object('tarjeta', tarjeta, 'desc', descripcion, 'cuota', monto_cuota, 'cuota_actual', cuota_actual, 'total', total_cuotas, 'fecha_fin', fecha_fin) ORDER BY fecha_fin)\n   FROM finanzas_personales.compromisos_tarjeta WHERE activo = true AND descripcion NOT ILIKE '%REINTEGRO%') AS compromisos,\n  (SELECT json_agg(h ORDER BY (h->>'mes'))\n   FROM (SELECT json_build_object('mes', h2.anio_mes, 'ingreso', h2.ingreso_total_ars, 'necesidades', h2.gastado_necesidades, 'deseos', h2.gastado_deseos, 'ahorro', h2.ahorro_real, 'tc', h2.tipo_cambio) AS h\n         FROM finanzas_personales.presupuesto_mensual h2 WHERE h2.mes_cerrado = true ORDER BY h2.anio_mes DESC LIMIT 6) t) AS historial_meses\nFROM finanzas_personales.presupuesto_mensual pm\nWHERE pm.anio_mes = TO_CHAR(CURRENT_DATE, 'YYYY-MM');"
+      },
+      "credentials": {
+        "postgres": {
+          "id": "c5vJmoXD1JooCpKG",
+          "name": "BD Supabase"
+        }
+      }
+    },
+    {
+      "id": "respond-dash",
+      "name": "Responder",
+      "type": "n8n-nodes-base.respondToWebhook",
+      "typeVersion": 1.1,
+      "position": [750, 300],
+      "parameters": {
+        "respondWith": "json",
+        "responseBody": "={{ $json }}",
+        "options": {
+          "responseHeaders": {
+            "entries": [
+              { "name": "Access-Control-Allow-Origin", "value": "*" },
+              { "name": "Cache-Control", "value": "no-cache" }
+            ]
+          }
+        }
+      }
+    }
+  ],
+  "connections": {
+    "Webhook": {
+      "main": [
+        [{ "node": "Query Dashboard", "type": "main", "index": 0 }]
+      ]
+    },
+    "Query Dashboard": {
+      "main": [
+        [{ "node": "Responder", "type": "main", "index": 0 }]
+      ]
+    }
+  },
+  "settings": {
+    "executionOrder": "v1",
+    "saveDataErrorExecution": "all",
+    "saveDataSuccessExecution": "all",
+    "saveManualExecutions": true,
+    "saveExecutionProgress": true,
+    "callerPolicy": "workflowsFromSameOwner",
+    "availableInMCP": true
+  },
+  "pinData": null,
+  "versionId": "c8098f04-5c0a-4408-9d0a-6c00e6b9e1b2",
+  "_meta": {
+    "exportedAt": "2026-04-20",
+    "n8nVersion": "ssn8n.myaivaro.com"
+  }
+}
