@@ -1,0 +1,770 @@
+﻿{
+    "id":  "MRW99xAuOv5kVtHS",
+    "name":  "💰 Asistente Financiero",
+    "active":  true,
+    "nodes":  [
+                  {
+                      "parameters":  {
+                                         "httpMethod":  "POST",
+                                         "path":  "asistente-financiero",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "webhook-wapp",
+                      "name":  "Webhook WhatsApp",
+                      "type":  "n8n-nodes-base.webhook",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -800,
+                                       256
+                                   ],
+                      "webhookId":  "e0d5e855-5d44-4917-983e-d1e3f5d6f500"
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "ycloud-check",
+                                                                                   "leftValue":  "={{ $json.body.type }}",
+                                                                                   "rightValue":  "whatsapp.inbound_message.received",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "evo-check",
+                                                                                   "leftValue":  "={{ $json.body.event }}",
+                                                                                   "rightValue":  "messages.upsert",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "or"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "if-entrante",
+                      "name":  "¿Es mensaje entrante?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -576,
+                                       256
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "caseSensitive":  true,
+                                                                            "leftValue":  "",
+                                                                            "typeValidation":  "strict",
+                                                                            "version":  2
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "audio-ycloud",
+                                                                                   "leftValue":  "={{$json.body.whatsappInboundMessage.type}}",
+                                                                                   "rightValue":  "audio",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               },
+                                                                               {
+                                                                                   "id":  "audio-evo",
+                                                                                   "leftValue":  "={{$json.body.data.messageType}}",
+                                                                                   "rightValue":  "audioMessage",
+                                                                                   "operator":  {
+                                                                                                    "type":  "string",
+                                                                                                    "operation":  "equals"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "or"
+                                                        },
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "if-audio",
+                      "name":  "¿Es audio?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       -352,
+                                       256
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const body = $input.first().json.body;\n\n// Evolution API: trae base64 directo\nif (body.data?.message?.base64) {\n  const base64 = body.data.message.base64;\n  const buffer = Buffer.from(base64, \u0027base64\u0027);\n  const binaryData = await this.helpers.prepareBinaryData(buffer, \u0027audio.ogg\u0027, \u0027audio/ogg\u0027);\n  return [{ json: {}, binary: { data: binaryData } }];\n}\n\n// YCloud: descargar desde URL\nif (body.whatsappInboundMessage?.audio?.link) {\n  const url = body.whatsappInboundMessage.audio.link;\n  const response = await this.helpers.request({ method: \u0027GET\u0027, url, encoding: null });\n  const binaryData = await this.helpers.prepareBinaryData(response, \u0027audio.ogg\u0027, \u0027audio/ogg\u0027);\n  return [{ json: {}, binary: { data: binaryData } }];\n}\n\nthrow new Error(\u0027No se encontro audio en el payload\u0027);"
+                                     },
+                      "id":  "descargar-audio",
+                      "name":  "Descargar audio",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       -128,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "resource":  "audio",
+                                         "operation":  "transcribe",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "transcribir-whisper",
+                      "name":  "Transcribir (Whisper)",
+                      "type":  "@n8n/n8n-nodes-langchain.openAi",
+                      "typeVersion":  1.8,
+                      "position":  [
+                                       96,
+                                       160
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "doxD8wCrP7dw8oHa",
+                                                            "name":  "OpenAi account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const transcripcion = $input.first().json.text;\nconst body = $(\u0027Webhook WhatsApp\u0027).first().json.body;\n\nlet from, customerName;\n\nif (body.data?.key?.remoteJid) {\n  from = body.data.key.remoteJid.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027);\n  customerName = body.data.pushName || \u0027\u0027;\n} else {\n  from = body.whatsappInboundMessage.from;\n  customerName = body.whatsappInboundMessage.customerProfile?.name || \u0027\u0027;\n}\n\nreturn { message: { text: transcripcion, from, customerName }, esAudio: true };"
+                                     },
+                      "id":  "prep-audio",
+                      "name":  "Preparar mensaje audio",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       320,
+                                       160
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "jsCode":  "const body = $input.first().json.body;\n\nlet text, from, customerName;\n\nif (body.data?.key?.remoteJid) {\n  text = body.data.message?.conversation || body.data.message?.extendedTextMessage?.text || \u0027\u0027;\n  from = body.data.key.remoteJid.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027);\n  customerName = body.data.pushName || \u0027\u0027;\n} else {\n  text = body.whatsappInboundMessage?.text?.body || \u0027\u0027;\n  from = body.whatsappInboundMessage?.from || \u0027\u0027;\n  customerName = body.whatsappInboundMessage?.customerProfile?.name || \u0027\u0027;\n}\n\nreturn { message: { text, from, customerName }, esAudio: false };"
+                                     },
+                      "id":  "prep-texto",
+                      "name":  "Preparar mensaje texto",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       320,
+                                       352
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "promptType":  "define",
+                                         "text":  "={{ $json.message.text }}",
+                                         "options":  {
+                                                         "systemMessage":  "=# ASISTENTE FINANCIERO — LUIS MOLINA\n\nSos el asistente financiero personal de Luis. Tu rol: registrar gastos, consultar situacion, ayudar a tomar decisiones financieras.\n\n## PERSONALIDAD\n- Directo y conciso, sin relleno ni saludos innecesarios\n- Emojis para claridad, nunca en exceso\n- Si hay algo que mejorar en las finanzas, lo decis sin vueltas\n- NUNCA empezas con \"Perfecto!\", \"Genial!\", \"Entendido!\"\n\n## CONTEXTO\n- Ingreso actual (Abril 2026 — cobra Marzo trabajado): U$D 1.400 (mes 5 del contrato)\n- Mayo 2026 (cobra Abril trabajado, mes 6): U$D 1.500 + U$D 800 bono = U$D 2.300\n- Cronograma: Nov-Ene mes1-3 $1.300 | Feb-Mar mes4-5 $1.400 | Abr mes6 $2.300 | May+ mes7+ $1.500\n- Cobro: 1er jueves habil del mes, impacta ~4 dias habiles despues (~dia 16)\n- Dia cobro: ~16 de cada mes (estimado)\n- Regla: 40% Necesidades | 25% Deseos | 20% Ahorro | 10% Reserva Tarjetas | 5% Imprevistos\n- Tarjetas: Galicia Credito (principal), Naranja X (secundaria), Mastercard Black Galicia (vieja)\n- IEB+: alias `luismolina.ieb` — ahi transfiere para pagar tarjetas\n\n## BILLETERAS\n- Fondo Juan (Emergencia): reserva de emergencia, no tocar salvo urgencia\n- Fondo para Auto: ahorro especifico para auto\n- Dinero Operativo: efectivo disponible del dia a dia\n- Reserva Tarjetas: fondos apartados para pagar Galicia y Naranja X\n\n## REGLAS DE COMPORTAMIENTO\n\n### Registrar gasto\n- Ejecutar DIRECTO con descripcion + monto + metodo\n- NUNCA invocar registrar_gasto si no tenes el monto exacto en el mensaje. Si falta el monto, preguntar AL USUARIO antes de llamar cualquier tool. Nunca pasar monto=null.\n- Solo preguntar si FALTA el metodo de pago o el monto.\n- Si en un listado de gastos falta el monto de alguno, registrar los que SI tienen monto y preguntar por los que faltan.\n- Inferir categoria: super/almacen→SUPERMERCADO, nafta/combustible→NAFTA_GAS, farmacia/remedios→FARMACIA, ropa/zapatos→ROPA_CALZADO, resto→OTROS_GASTOS\n- Sin fecha = hoy\n\n### Actualizar billetera\n- Ejecutar SIEMPRE sin pedir confirmacion\n- \"cargue X a reserva\" / \"aparte X para tarjetas\" → Reserva Tarjetas\n- \"meti X al fondo\" → Fondo Juan (Emergencia)\n- \"guarde X para el auto\" → Fondo para Auto\n\n### Simular compra en cuotas\n- Usar simular_cuotas siempre que diga \"en N cuotas\" o \"me conviene en cuotas\"\n\n### Gastos recientes / eliminar\n- Para eliminar: SIEMPRE consultar_gastos_recientes primero para obtener el id\n\n## FORMATOS DE RESPUESTA\n\n### Registro exitoso\n✅ [Descripcion] — $[monto] ([metodo])\n📂 [Categoria]\n\n### Resumen financiero\n📌 SIEMPRE llamar `consultar_presupuesto` primero para obtener el mes y TC correcto. El mes se obtiene del campo `mes` (formato YYYY-MM). Nunca inventar ni asumir el mes.\n💰 *RESUMEN — [MES AÑO]*\n\n💵 Ingreso: U$D [X] → $[X] (TC: $[X])\n\n📊 *PRESUPUESTO*\n🏠 Necesidades   $[gastado] / $[total] — [%]%\n🎯 Deseos        $[gastado] / $[total] — [%]%\n💚 Ahorro        $[gastado] / $[total] — [%]%\n💳 Reserva TC    $[saldo] / $[total] — [%]%\n🛡️ Imprevistos   $[gastado] / $[total] — [%]%\n\n✅ Disponible hoy: $[X]\n\n### Tarjetas\n💳 *TARJETAS — [MES]*\n\n*GALICIA*\n• [concepto] $[X] ([c]/[t])\nTotal Luis: $[X]\n\n*NARANJA X*\n• [concepto] $[X] ([c]/[t])\nTotal Luis: $[X]\n\nReintegros (te devuelven): $[X]\n💳 Transferir a IEB+ (`luismolina.ieb`): $[X]\n\n### Simulacion cuotas\n🛒 [Producto] — $[X] en [N] cuotas\nCuota mensual: $[X]\nDisponible actual: $[X]\nDisponible post-compra: $[X]\nEstado: [✅ Viable / ⚠️ Ajustado / ❌ No recomendado]\n\n### Vencimientos proximos\n⏰ *VENCIMIENTOS PROXIMOS*\n• [icono] [concepto] — $[monto] — en [N] dias\n\n## ALERTAS PROACTIVAS\n- Si disponible \u003c 20% del presupuesto deseos → avisar con ⚠️\n- Si consultan resumen y hay vencimientos en 3 dias → mencionar al final"
+                                                     }
+                                     },
+                      "id":  "agente",
+                      "name":  "Agente Financiero",
+                      "type":  "@n8n/n8n-nodes-langchain.agent",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       1184,
+                                       256
+                                   ]
+                  },
+                  {
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.ycloud.com/v2/whatsapp/messages",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"from\": \"5493815762656\",\n  \"to\": \"{{ $(\u0027Webhook WhatsApp\u0027).item.json.body.data?.key?.remoteJid?.replace(\u0027@s.whatsapp.net\u0027, \u0027\u0027) || $(\u0027Webhook WhatsApp\u0027).item.json.body.whatsappInboundMessage?.from }}\",\n  \"type\": \"text\",\n  \"text\": {\n    \"body\": {{ JSON.stringify($json.output) }}\n  }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "responder-wapp",
+                      "name":  "Responder WhatsApp",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       2160,
+                                       256
+                                   ],
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "pFmujxRRv8RAE6kX",
+                                                                 "name":  "YCloud  Cuenta"
+                                                             }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "model":  "gpt-4.1",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "lm-openai",
+                      "name":  "OpenAI GPT-4.1",
+                      "type":  "@n8n/n8n-nodes-langchain.lmChatOpenAi",
+                      "typeVersion":  1,
+                      "position":  [
+                                       544,
+                                       480
+                                   ],
+                      "credentials":  {
+                                          "openAiApi":  {
+                                                            "id":  "doxD8wCrP7dw8oHa",
+                                                            "name":  "OpenAi account"
+                                                        }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Registra un gasto variable. Ejecutar DIRECTO cuando se tienen descripcion + monto + metodo de pago. Solo preguntar si falta el metodo de pago. Inferir categoria segun contexto. Sin fecha = hoy.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT * FROM finanzas_personales.registrar_gasto($1, $2, $3, $4, $5);",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $fromAI(\u0027descripcion\u0027, \u0027Descripcion del gasto\u0027, \u0027string\u0027) }}, {{ $fromAI(\u0027monto\u0027, \u0027Monto en pesos ARS\u0027, \u0027number\u0027) }}, {{ $fromAI(\u0027categoria\u0027, \u0027Categoria: SUPERMERCADO, NAFTA_GAS, FARMACIA, ROPA_CALZADO, SALIDAS_OCIO, HOGAR_LIMPIEZA, REGALOS, CUIDADO_PERSONAL, DEPORTE_RECREACION, SUPLEMENTOS, OTROS_GASTOS\u0027, \u0027string\u0027) }}, {{ $fromAI(\u0027metodo_pago\u0027, \u0027Metodo: EFECTIVO, DEBITO_GALICIA, DEBITO_NARANJA, CREDITO_NARANJA, CREDITO_GALICIA, MERCADO_PAGO\u0027, \u0027string\u0027) }}, {{ $fromAI(\u0027fecha\u0027, \u0027Fecha del gasto en formato YYYY-MM-DD. Sin fecha = hoy.\u0027, \u0027string\u0027) }}"
+                                                     }
+                                     },
+                      "id":  "tool-registrar-gasto",
+                      "name":  "registrar_gasto",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       544,
+                                       736
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Devuelve los ultimos 20 gastos de los ultimos 7 dias con id, fecha, categoria, monto y metodo de pago. Usar para gastos recientes o para obtener el id antes de eliminar.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT gv.id, gv.fecha, cg.icono, cg.nombre as categoria, gv.descripcion, gv.monto, gv.metodo_pago FROM finanzas_personales.gastos_variables gv JOIN finanzas_personales.categorias_gasto cg ON gv.categoria_id = cg.id WHERE gv.fecha \u003e= CURRENT_DATE - INTERVAL \u00277 days\u0027 ORDER BY gv.fecha DESC, gv.creado_en DESC LIMIT 20;",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-gastos-recientes",
+                      "name":  "consultar_gastos_recientes",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       688,
+                                       736
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Elimina un gasto por su id. SIEMPRE usar consultar_gastos_recientes primero para obtener el id. Si hay duplicados mostrar ambos y preguntar cual eliminar.",
+                                         "operation":  "executeQuery",
+                                         "query":  "DELETE FROM finanzas_personales.gastos_variables WHERE id = $1 RETURNING id, descripcion, monto;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $fromAI(\u0027id_gasto\u0027, \u0027ID numerico del gasto a eliminar, obtenido de consultar_gastos_recientes\u0027, \u0027number\u0027) }}"
+                                                     }
+                                     },
+                      "id":  "tool-eliminar-gasto",
+                      "name":  "eliminar_gasto",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       832,
+                                       736
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Registra un ingreso extra al presupuesto del mes actual (freelance, bono, venta, etc.) y recalcula automaticamente los presupuestos. Ejecutar SIN pedir confirmacion cuando el usuario menciona monto y concepto del ingreso extra.",
+                                         "operation":  "executeQuery",
+                                         "query":  "WITH config AS (\n  SELECT regla_necesidades_pct, regla_deseos_pct, regla_ahorro_pct\n  FROM finanzas_personales.configuracion LIMIT 1\n),\nnuevo AS (\n  SELECT ingreso_total_ars + $1 AS nuevo_total\n  FROM finanzas_personales.presupuesto_mensual\n  WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)\n)\nUPDATE finanzas_personales.presupuesto_mensual pm\nSET\n  ingreso_total_ars = n.nuevo_total,\n  presupuesto_necesidades = ROUND(n.nuevo_total * c.regla_necesidades_pct / 100),\n  presupuesto_deseos = ROUND(n.nuevo_total * c.regla_deseos_pct / 100),\n  presupuesto_ahorro = ROUND(n.nuevo_total * c.regla_ahorro_pct / 100)\nFROM nuevo n, config c\nWHERE pm.anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)\nRETURNING pm.anio_mes, pm.ingreso_total_ars, pm.presupuesto_necesidades, pm.presupuesto_deseos, pm.presupuesto_ahorro;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $fromAI(\u0027monto_extra\u0027, \u0027Monto del ingreso extra en ARS\u0027, \u0027number\u0027) }}"
+                                                     }
+                                     },
+                      "id":  "tool-ingreso-extra",
+                      "name":  "registrar_ingreso_extra",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       368,
+                                       720
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Actualiza el saldo de una billetera y registra en historial. Billeteras: Fondo Juan (Emergencia), Fondo para Auto, Dinero Operativo, Reserva Tarjetas. Ejecutar SIEMPRE sin pedir confirmacion.",
+                                         "operation":  "executeQuery",
+                                         "query":  "WITH saldo_anterior AS (\n  SELECT b.id, b.saldo_actual\n  FROM finanzas_personales.billeteras b\n  JOIN finanzas_personales.tipos_billetera tb ON b.tipo_billetera_id = tb.id\n  WHERE LOWER(tb.nombre) LIKE LOWER(\u0027%\u0027 || $1 || \u0027%\u0027)\n),\nactualizado AS (\n  UPDATE finanzas_personales.billeteras b\n  SET saldo_actual = $2, actualizado_en = NOW()\n  FROM finanzas_personales.tipos_billetera tb\n  WHERE b.tipo_billetera_id = tb.id\n    AND LOWER(tb.nombre) LIKE LOWER(\u0027%\u0027 || $1 || \u0027%\u0027)\n  RETURNING b.id, b.saldo_actual\n)\nINSERT INTO finanzas_personales.historial_billeteras\n  (billetera_id, saldo_anterior, saldo_nuevo, diferencia, tipo_cambio, notas)\nSELECT a.id, s.saldo_actual, a.saldo_actual, a.saldo_actual - s.saldo_actual, \u0027MERCADO\u0027, \u0027Actualizacion manual\u0027\nFROM actualizado a JOIN saldo_anterior s ON a.id = s.id\nRETURNING *;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $fromAI(\u0027nombre_billetera\u0027, \u0027Nombre: Fondo Juan (Emergencia), Fondo para Auto, Dinero Operativo, Reserva Tarjetas\u0027, \u0027string\u0027) }}, {{ $fromAI(\u0027nuevo_saldo\u0027, \u0027Nuevo saldo en pesos ARS\u0027, \u0027number\u0027) }}"
+                                                     }
+                                     },
+                      "id":  "tool-actualizar-billetera",
+                      "name":  "actualizar_billetera",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       992,
+                                       736
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Muestra el resumen financiero completo: ingresos, presupuesto 40/25/20/10/5, gastos fijos, compromisos de tarjeta y disponible real. Usar para \u0027resumen\u0027, \u0027como estoy\u0027, \u0027mi situacion\u0027.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT * FROM finanzas_personales.vista_resumen_completo;",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-resumen",
+                      "name":  "consultar_resumen_completo",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       1168,
+                                       736
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Obtiene el presupuesto del mes actual: ingresos, presupuesto por categoria (40/25/20/10/5), lo gastado y el disponible restante.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT anio_mes as mes, ingreso_total_usd, ingreso_total_ars as ingreso_total, tipo_cambio, presupuesto_necesidades, presupuesto_deseos, presupuesto_ahorro, gastado_necesidades, gastado_deseos, compromisos_tc, disponible_para_gastar FROM finanzas_personales.presupuesto_mensual WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027);",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-presupuesto",
+                      "name":  "consultar_presupuesto",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       1504,
+                                       752
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Muestra todas las cuotas activas de tarjetas: monto por cuota, cuotas restantes y total pendiente. Usar cuando pregunta por deudas, cuotas o compromisos de tarjeta.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT tarjeta, descripcion as concepto, monto_cuota as cuota_mensual, cuota_actual, total_cuotas, fecha_fin, (total_cuotas - cuota_actual) as cuotas_restantes, monto_cuota * (total_cuotas - cuota_actual) as total_pendiente FROM finanzas_personales.compromisos_tarjeta WHERE activo = TRUE AND descripcion NOT ILIKE \u0027%REINTEGRO%\u0027 ORDER BY fecha_fin;",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-compromisos",
+                      "name":  "consultar_compromisos_tc",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       1328,
+                                       752
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Desglose completo del pago de tarjetas separando Luis vs reintegros de Sole/hermanos: Galicia Nueva, Galicia Vieja (Black), Naranja X, subs USD y percepcion ARCA. Usar cuando pregunta cuanto paga de tarjeta.",
+                                         "operation":  "executeQuery",
+                                         "query":  "WITH tc AS (SELECT finanzas_personales.obtener_tc() AS valor),\ngal_nueva_luis AS (\n  SELECT COALESCE(SUM(monto_cuota), 0) AS total,\n    STRING_AGG(LEFT(descripcion, 32) || \u0027 $\u0027 || REPLACE(TO_CHAR(ROUND(monto_cuota), \u0027FM999,999,999\u0027), \u0027,\u0027, \u0027.\u0027) || \u0027 (\u0027 || cuota_actual || \u0027/\u0027 || total_cuotas || \u0027)\u0027, E\u0027\\n\u0027 ORDER BY monto_cuota DESC) AS detalle\n  FROM finanzas_personales.compromisos_tarjeta\n  WHERE activo = true AND descripcion NOT ILIKE \u0027%REINTEGRO%\u0027 AND descripcion NOT ILIKE \u0027%HERMANO%\u0027\n    AND tarjeta IN (\u0027CREDITO_GALICIA\u0027, \u0027Mastercard Galicia\u0027)\n    AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date\n    AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\n),\ngal_nueva_otros AS (\n  SELECT COALESCE(SUM(monto_cuota), 0) AS total,\n    COALESCE(SUM(CASE WHEN descripcion ILIKE \u0027%REINTEGRO%\u0027 THEN monto_cuota ELSE 0 END), 0) AS sole_total,\n    COALESCE(SUM(CASE WHEN descripcion ILIKE \u0027%HERMANO%\u0027 THEN monto_cuota ELSE 0 END), 0) AS hermano_total,\n    STRING_AGG(LEFT(descripcion, 32) || \u0027 $\u0027 || REPLACE(TO_CHAR(ROUND(monto_cuota), \u0027FM999,999,999\u0027), \u0027,\u0027, \u0027.\u0027) || \u0027 (\u0027 || cuota_actual || \u0027/\u0027 || total_cuotas || \u0027)\u0027, E\u0027\\n\u0027 ORDER BY monto_cuota DESC) AS detalle\n  FROM finanzas_personales.compromisos_tarjeta\n  WHERE activo = true AND (descripcion ILIKE \u0027%REINTEGRO%\u0027 OR descripcion ILIKE \u0027%HERMANO%\u0027)\n    AND tarjeta IN (\u0027CREDITO_GALICIA\u0027, \u0027Mastercard Galicia\u0027)\n    AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date\n    AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\n),\ngal_vieja AS (\n  SELECT COALESCE(SUM(monto_cuota), 0) AS total,\n    STRING_AGG(LEFT(descripcion, 32) || \u0027 $\u0027 || REPLACE(TO_CHAR(ROUND(monto_cuota), \u0027FM999,999,999\u0027), \u0027,\u0027, \u0027.\u0027) || \u0027 (\u0027 || cuota_actual || \u0027/\u0027 || total_cuotas || \u0027)\u0027, E\u0027\\n\u0027 ORDER BY monto_cuota DESC) AS detalle\n  FROM finanzas_personales.compromisos_tarjeta\n  WHERE activo = true AND tarjeta = \u0027Mastercard Black Galicia\u0027\n    AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date\n    AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\n),\nnar_luis AS (\n  SELECT COALESCE(SUM(monto_cuota), 0) AS total,\n    STRING_AGG(LEFT(descripcion, 32) || \u0027 $\u0027 || REPLACE(TO_CHAR(ROUND(monto_cuota), \u0027FM999,999,999\u0027), \u0027,\u0027, \u0027.\u0027) || \u0027 (\u0027 || cuota_actual || \u0027/\u0027 || total_cuotas || \u0027)\u0027, E\u0027\\n\u0027 ORDER BY monto_cuota DESC) AS detalle\n  FROM finanzas_personales.compromisos_tarjeta\n  WHERE activo = true AND descripcion NOT ILIKE \u0027%REINTEGRO%\u0027 AND UPPER(tarjeta) LIKE \u0027%NARANJA%\u0027\n    AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date\n    AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\n),\nnar_otros AS (\n  SELECT COALESCE(SUM(monto_cuota), 0) AS total,\n    STRING_AGG(LEFT(descripcion, 32) || \u0027 $\u0027 || REPLACE(TO_CHAR(ROUND(monto_cuota), \u0027FM999,999,999\u0027), \u0027,\u0027, \u0027.\u0027) || \u0027 (\u0027 || cuota_actual || \u0027/\u0027 || total_cuotas || \u0027)\u0027, E\u0027\\n\u0027 ORDER BY monto_cuota DESC) AS detalle\n  FROM finanzas_personales.compromisos_tarjeta\n  WHERE activo = true AND descripcion ILIKE \u0027%REINTEGRO%\u0027 AND UPPER(tarjeta) LIKE \u0027%NARANJA%\u0027\n    AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date\n    AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\n),\nsubs_usd AS (\n  SELECT\n    COALESCE(SUM(CASE WHEN UPPER(COALESCE(metodo_pago,\u0027\u0027)) NOT LIKE \u0027%NARANJA%\u0027 AND nombre NOT ILIKE \u0027%HERMANO%\u0027 THEN monto ELSE 0 END), 0) AS galicia_usd,\n    COALESCE(SUM(CASE WHEN UPPER(COALESCE(metodo_pago,\u0027\u0027)) LIKE \u0027%NARANJA%\u0027 AND nombre NOT ILIKE \u0027%HERMANO%\u0027 THEN monto ELSE 0 END), 0) AS naranja_usd,\n    COALESCE(SUM(CASE WHEN UPPER(COALESCE(metodo_pago,\u0027\u0027)) LIKE \u0027%NARANJA%\u0027 AND nombre ILIKE \u0027%HERMANO%\u0027 THEN monto ELSE 0 END), 0) AS hermano_naranja_usd,\n    STRING_AGG(nombre || \u0027 U$D \u0027 || TO_CHAR(monto, \u0027FM999,990.00\u0027), E\u0027\\n\u0027 ORDER BY monto DESC) FILTER (WHERE UPPER(COALESCE(metodo_pago,\u0027\u0027)) NOT LIKE \u0027%NARANJA%\u0027 AND nombre NOT ILIKE \u0027%HERMANO%\u0027) AS det_galicia,\n    STRING_AGG(nombre || \u0027 U$D \u0027 || TO_CHAR(monto, \u0027FM999,990.00\u0027), E\u0027\\n\u0027 ORDER BY monto DESC) FILTER (WHERE UPPER(COALESCE(metodo_pago,\u0027\u0027)) LIKE \u0027%NARANJA%\u0027 AND nombre NOT ILIKE \u0027%HERMANO%\u0027) AS det_naranja,\n    STRING_AGG(REPLACE(nombre, \u0027[HERMANO] \u0027, \u0027\u0027) || \u0027 U$D \u0027 || TO_CHAR(monto, \u0027FM999,990.00\u0027), E\u0027\\n\u0027 ORDER BY monto DESC) FILTER (WHERE UPPER(COALESCE(metodo_pago,\u0027\u0027)) LIKE \u0027%NARANJA%\u0027 AND nombre ILIKE \u0027%HERMANO%\u0027) AS det_hermano_naranja\n  FROM finanzas_personales.gastos_fijos WHERE activo = true AND moneda = \u0027USD\u0027\n)\nSELECT\n  gln.total AS gal_nueva_luis_ars, gln.detalle AS gal_nueva_luis_det,\n  gno.total AS gal_nueva_otros_ars, gno.sole_total AS gal_sole_ars, gno.hermano_total AS gal_hermano_ars, gno.detalle AS gal_nueva_otros_det,\n  gv.total AS gal_vieja_ars, gv.detalle AS gal_vieja_det,\n  nl.total AS nar_luis_ars, nl.detalle AS nar_luis_det,\n  no2.total AS nar_otros_ars, no2.detalle AS nar_otros_det,\n  su.galicia_usd, su.naranja_usd, su.hermano_naranja_usd,\n  su.det_galicia AS subs_galicia_det, su.det_naranja AS subs_naranja_det, su.det_hermano_naranja AS subs_hermano_nar_det,\n  tc.valor AS tc_actual,\n  ROUND(su.galicia_usd * tc.valor) AS galicia_usd_ars, ROUND(su.naranja_usd * tc.valor) AS naranja_usd_ars, ROUND(su.hermano_naranja_usd * tc.valor) AS hermano_naranja_ars,\n  ROUND(su.galicia_usd * tc.valor * 0.30) AS percep_galicia, ROUND(su.naranja_usd * tc.valor * 0.30) AS percep_naranja,\n  CASE EXTRACT(MONTH FROM CURRENT_DATE)::int WHEN 1 THEN \u0027Enero\u0027 WHEN 2 THEN \u0027Febrero\u0027 WHEN 3 THEN \u0027Marzo\u0027 WHEN 4 THEN \u0027Abril\u0027 WHEN 5 THEN \u0027Mayo\u0027 WHEN 6 THEN \u0027Junio\u0027 WHEN 7 THEN \u0027Julio\u0027 WHEN 8 THEN \u0027Agosto\u0027 WHEN 9 THEN \u0027Septiembre\u0027 WHEN 10 THEN \u0027Octubre\u0027 WHEN 11 THEN \u0027Noviembre\u0027 WHEN 12 THEN \u0027Diciembre\u0027 END || \u0027 \u0027 || EXTRACT(YEAR FROM CURRENT_DATE)::text AS mes_actual\nFROM gal_nueva_luis gln, gal_nueva_otros gno, gal_vieja gv, nar_luis nl, nar_otros no2, subs_usd su, tc",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-pago-tarjetas",
+                      "name":  "consultar_pago_tarjetas",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       1632,
+                                       640
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Muestra gastos fijos que vencen en los proximos 7 dias. Usar para pagos futuros proximos. Tambien llamar proactivamente al dar un resumen financiero.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT cg.icono, gf.nombre as concepto, CASE WHEN gf.es_compartido THEN gf.monto / 2 ELSE gf.monto END as monto, gf.moneda, gf.dia_vencimiento as dia,\n  CASE WHEN gf.dia_vencimiento \u003e= EXTRACT(DAY FROM CURRENT_DATE) THEN gf.dia_vencimiento - EXTRACT(DAY FROM CURRENT_DATE)::int\n  ELSE gf.dia_vencimiento + DATE_PART(\u0027days\u0027, DATE_TRUNC(\u0027month\u0027, CURRENT_DATE + INTERVAL \u00271 month\u0027) - DATE_TRUNC(\u0027month\u0027, CURRENT_DATE))::int - EXTRACT(DAY FROM CURRENT_DATE)::int\n  END as dias_restantes\nFROM finanzas_personales.gastos_fijos gf JOIN finanzas_personales.categorias_gasto cg ON gf.categoria_id = cg.id\nWHERE gf.activo = TRUE AND gf.dia_vencimiento IS NOT NULL\n  AND ((gf.dia_vencimiento \u003e= EXTRACT(DAY FROM CURRENT_DATE) AND gf.dia_vencimiento \u003c= EXTRACT(DAY FROM CURRENT_DATE) + 7)\n    OR (EXTRACT(DAY FROM CURRENT_DATE) \u003e 23 AND gf.dia_vencimiento \u003c= ((EXTRACT(DAY FROM CURRENT_DATE) + 7) - DATE_PART(\u0027days\u0027, DATE_TRUNC(\u0027month\u0027, CURRENT_DATE + INTERVAL \u00271 month\u0027) - DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)))))\nORDER BY dias_restantes;",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "id":  "tool-vencimientos",
+                      "name":  "consultar_vencimientos_proximos",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       1824,
+                                       624
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "parameters":  {
+                                         "descriptionType":  "manual",
+                                         "toolDescription":  "Simula el impacto de una compra en cuotas: cuota mensual, total con financiacion, impacto en disponible, viabilidad. Usar cuando dice \u0027en N cuotas\u0027, \u0027me conviene en cuotas\u0027, \u0027simula X en N cuotas\u0027.",
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT $1::numeric AS monto_total, $2::integer AS cuotas, ROUND($1::numeric / $2::integer) AS cuota_mensual,\n  (SELECT COALESCE(SUM(monto_cuota),0) FROM finanzas_personales.compromisos_tarjeta WHERE activo AND DATE_TRUNC(\u0027month\u0027, fecha_inicio) \u003c= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)) AS compromisos_actuales,\n  (SELECT COALESCE(disponible_para_gastar, 0) FROM finanzas_personales.presupuesto_mensual WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)) AS disponible_actual,\n  (SELECT COALESCE(presupuesto_deseos, 0) FROM finanzas_personales.presupuesto_mensual WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)) AS presupuesto_deseos,\n  (SELECT COALESCE(disponible_para_gastar, 0) FROM finanzas_personales.presupuesto_mensual WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)) - ROUND($1::numeric / $2::integer) AS disponible_post_compra,\n  CASE WHEN (SELECT COALESCE(disponible_para_gastar, 0) FROM finanzas_personales.presupuesto_mensual WHERE anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027)) - ROUND($1::numeric / $2::integer) \u003e= 0 THEN \u0027✅ Viable\u0027 ELSE \u0027⚠️ Supera el disponible\u0027 END AS viabilidad,\n  (SELECT COALESCE(dolar_blue, 0) FROM finanzas_personales.tipo_cambio ORDER BY fecha DESC LIMIT 1) AS tc_actual;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $fromAI(\u0027monto_total\u0027, \u0027Monto total de la compra en ARS\u0027, \u0027number\u0027) }}, {{ $fromAI(\u0027cantidad_cuotas\u0027, \u0027Cantidad de cuotas\u0027, \u0027number\u0027) }}"
+                                                     }
+                                     },
+                      "id":  "tool-simular",
+                      "name":  "simular_cuotas",
+                      "type":  "n8n-nodes-base.postgresTool",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       2000,
+                                       624
+                                   ],
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Webhook WhatsApp":  {
+                                                 "main":  [
+                                                              [
+                                                                  {
+                                                                      "node":  "¿Es mensaje entrante?",
+                                                                      "type":  "main",
+                                                                      "index":  0
+                                                                  }
+                                                              ]
+                                                          ]
+                                             },
+                        "¿Es mensaje entrante?":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "¿Es audio?",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "¿Es audio?":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Descargar audio",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ],
+                                                        [
+                                                            {
+                                                                "node":  "Preparar mensaje texto",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Descargar audio":  {
+                                                "main":  [
+                                                             [
+                                                                 {
+                                                                     "node":  "Transcribir (Whisper)",
+                                                                     "type":  "main",
+                                                                     "index":  0
+                                                                 }
+                                                             ]
+                                                         ]
+                                            },
+                        "Transcribir (Whisper)":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Preparar mensaje audio",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Preparar mensaje audio":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Agente Financiero",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Preparar mensaje texto":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Agente Financiero",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Agente Financiero":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Responder WhatsApp",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "OpenAI GPT-4.1":  {
+                                               "ai_languageModel":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Agente Financiero",
+                                                                                "type":  "ai_languageModel",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                           },
+                        "registrar_gasto":  {
+                                                "ai_tool":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Agente Financiero",
+                                                                        "type":  "ai_tool",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                            },
+                        "consultar_gastos_recientes":  {
+                                                           "ai_tool":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Agente Financiero",
+                                                                                   "type":  "ai_tool",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                       },
+                        "eliminar_gasto":  {
+                                               "ai_tool":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Agente Financiero",
+                                                                       "type":  "ai_tool",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                           },
+                        "registrar_ingreso_extra":  {
+                                                        "ai_tool":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Agente Financiero",
+                                                                                "type":  "ai_tool",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                    },
+                        "actualizar_billetera":  {
+                                                     "ai_tool":  [
+                                                                     [
+                                                                         {
+                                                                             "node":  "Agente Financiero",
+                                                                             "type":  "ai_tool",
+                                                                             "index":  0
+                                                                         }
+                                                                     ]
+                                                                 ]
+                                                 },
+                        "consultar_resumen_completo":  {
+                                                           "ai_tool":  [
+                                                                           [
+                                                                               {
+                                                                                   "node":  "Agente Financiero",
+                                                                                   "type":  "ai_tool",
+                                                                                   "index":  0
+                                                                               }
+                                                                           ]
+                                                                       ]
+                                                       },
+                        "consultar_presupuesto":  {
+                                                      "ai_tool":  [
+                                                                      [
+                                                                          {
+                                                                              "node":  "Agente Financiero",
+                                                                              "type":  "ai_tool",
+                                                                              "index":  0
+                                                                          }
+                                                                      ]
+                                                                  ]
+                                                  },
+                        "consultar_compromisos_tc":  {
+                                                         "ai_tool":  [
+                                                                         [
+                                                                             {
+                                                                                 "node":  "Agente Financiero",
+                                                                                 "type":  "ai_tool",
+                                                                                 "index":  0
+                                                                             }
+                                                                         ]
+                                                                     ]
+                                                     },
+                        "consultar_pago_tarjetas":  {
+                                                        "ai_tool":  [
+                                                                        [
+                                                                            {
+                                                                                "node":  "Agente Financiero",
+                                                                                "type":  "ai_tool",
+                                                                                "index":  0
+                                                                            }
+                                                                        ]
+                                                                    ]
+                                                    },
+                        "consultar_vencimientos_proximos":  {
+                                                                "ai_tool":  [
+                                                                                [
+                                                                                    {
+                                                                                        "node":  "Agente Financiero",
+                                                                                        "type":  "ai_tool",
+                                                                                        "index":  0
+                                                                                    }
+                                                                                ]
+                                                                            ]
+                                                            },
+                        "simular_cuotas":  {
+                                               "ai_tool":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Agente Financiero",
+                                                                       "type":  "ai_tool",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "America/Argentina/Buenos_Aires",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  true,
+                     "binaryMode":  "separate"
+                 },
+    "pinData":  {
+
+                },
+    "versionId":  "e083c420-7fb0-48ad-8c97-aa29de9102d3",
+    "_meta":  {
+                  "exportedAt":  "2026-04-20",
+                  "n8nVersion":  "your-n8n-instance.example.com"
+              }
+}

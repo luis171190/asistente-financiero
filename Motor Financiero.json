@@ -1,0 +1,742 @@
+﻿{
+    "id":  "QP4sGT61smMGJU2m",
+    "name":  "⚙️ Motor Financiero",
+    "active":  true,
+    "nodes":  [
+                  {
+                      "id":  "cron-trigger",
+                      "name":  "Schedule",
+                      "type":  "n8n-nodes-base.scheduleTrigger",
+                      "typeVersion":  1.2,
+                      "position":  [
+                                       -800,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "rule":  {
+                                                      "interval":  [
+                                                                       {
+                                                                           "field":  "cronExpression",
+                                                                           "expression":  "0 9 * * *"
+                                                                       }
+                                                                   ]
+                                                  }
+                                     }
+                  },
+                  {
+                      "id":  "switch-dia",
+                      "name":  "Que hacer hoy",
+                      "type":  "n8n-nodes-base.switch",
+                      "typeVersion":  3.2,
+                      "position":  [
+                                       -560,
+                                       300
+                                   ],
+                      "parameters":  {
+                                         "mode":  "rules",
+                                         "rules":  {
+                                                       "values":  [
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "siempre",
+                                                                                                                    "leftValue":  "1",
+                                                                                                                    "rightValue":  "1",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Siempre"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "lunes",
+                                                                                                                    "leftValue":  "={{ $now.toFormat(\u0027c\u0027) }}",
+                                                                                                                    "rightValue":  "1",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Lunes"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "dia25",
+                                                                                                                    "leftValue":  "={{ $now.toFormat(\u0027d\u0027) }}",
+                                                                                                                    "rightValue":  "25",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Dia25"
+                                                                      },
+                                                                      {
+                                                                          "conditions":  {
+                                                                                             "options":  {
+                                                                                                             "caseSensitive":  true,
+                                                                                                             "leftValue":  "",
+                                                                                                             "typeValidation":  "strict",
+                                                                                                             "version":  2
+                                                                                                         },
+                                                                                             "conditions":  [
+                                                                                                                {
+                                                                                                                    "id":  "dia1",
+                                                                                                                    "leftValue":  "={{ $now.toFormat(\u0027d\u0027) }}",
+                                                                                                                    "rightValue":  "1",
+                                                                                                                    "operator":  {
+                                                                                                                                     "type":  "string",
+                                                                                                                                     "operation":  "equals"
+                                                                                                                                 }
+                                                                                                                }
+                                                                                                            ],
+                                                                                             "combinator":  "and"
+                                                                                         },
+                                                                          "renameOutput":  true,
+                                                                          "outputKey":  "Dia1"
+                                                                      }
+                                                                  ]
+                                                   },
+                                         "options":  {
+                                                         "allMatchingOutputs":  true
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "fetch-tc",
+                      "name":  "Fetch Tipo de Cambio",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       -320,
+                                       140
+                                   ],
+                      "parameters":  {
+                                         "method":  "GET",
+                                         "url":  "https://dolarapi.com/v1/dolares/blue",
+                                         "options":  {
+
+                                                     }
+                                     }
+                  },
+                  {
+                      "id":  "guardar-tc",
+                      "name":  "Guardar TC",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       -80,
+                                       140
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "INSERT INTO finanzas_personales.tipo_cambio (fecha, dolar_blue, dolar_oficial, fuente)\nVALUES (CURRENT_DATE, $1, $2, \u0027dolarapi.com\u0027)\nON CONFLICT (fecha) DO UPDATE SET dolar_blue = $1, dolar_oficial = $2;",
+                                         "options":  {
+                                                         "queryReplacement":  "={{ $json.venta }}, {{ $json.compra }}"
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "query-venc",
+                      "name":  "Consultar Vencimientos",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       160,
+                                       140
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT cg.icono, gf.nombre as concepto, CASE WHEN gf.es_compartido THEN gf.monto / 2 ELSE gf.monto END as monto, gf.moneda, gf.dia_vencimiento as dia,\n  CASE WHEN gf.dia_vencimiento \u003e= EXTRACT(DAY FROM CURRENT_DATE) THEN gf.dia_vencimiento - EXTRACT(DAY FROM CURRENT_DATE)::int\n  ELSE gf.dia_vencimiento + DATE_PART(\u0027days\u0027, DATE_TRUNC(\u0027month\u0027, CURRENT_DATE + INTERVAL \u00271 month\u0027) - DATE_TRUNC(\u0027month\u0027, CURRENT_DATE))::int - EXTRACT(DAY FROM CURRENT_DATE)::int\n  END as dias_restantes\nFROM finanzas_personales.gastos_fijos gf JOIN finanzas_personales.categorias_gasto cg ON gf.categoria_id = cg.id\nWHERE gf.activo = TRUE AND gf.dia_vencimiento IS NOT NULL\n  AND ((gf.dia_vencimiento \u003e= EXTRACT(DAY FROM CURRENT_DATE) AND gf.dia_vencimiento \u003c= EXTRACT(DAY FROM CURRENT_DATE) + 3)\n    OR (EXTRACT(DAY FROM CURRENT_DATE) \u003e 27 AND gf.dia_vencimiento \u003c= ((EXTRACT(DAY FROM CURRENT_DATE) + 3) - DATE_PART(\u0027days\u0027, DATE_TRUNC(\u0027month\u0027, CURRENT_DATE + INTERVAL \u00271 month\u0027) - DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)))))\nORDER BY dias_restantes;"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "if-venc",
+                      "name":  "Hay vencimientos?",
+                      "type":  "n8n-nodes-base.if",
+                      "typeVersion":  2.2,
+                      "position":  [
+                                       400,
+                                       140
+                                   ],
+                      "parameters":  {
+                                         "conditions":  {
+                                                            "options":  {
+                                                                            "version":  2,
+                                                                            "leftValue":  "",
+                                                                            "caseSensitive":  true,
+                                                                            "typeValidation":  "strict"
+                                                                        },
+                                                            "conditions":  [
+                                                                               {
+                                                                                   "id":  "tiene-datos",
+                                                                                   "leftValue":  "={{ $items().length }}",
+                                                                                   "rightValue":  0,
+                                                                                   "operator":  {
+                                                                                                    "type":  "number",
+                                                                                                    "operation":  "gt"
+                                                                                                }
+                                                                               }
+                                                                           ],
+                                                            "combinator":  "and"
+                                                        },
+                                         "options":  {
+
+                                                     },
+                                         "looseTypeValidation":  true
+                                     }
+                  },
+                  {
+                      "id":  "armar-alerta-venc",
+                      "name":  "Armar alerta vencimientos",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       640,
+                                       60
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const items = $input.all();\nlet msg = \u0027⏰ *VENCIMIENTOS PROXIMOS*\\n\\n\u0027;\nitems.forEach(item =\u003e {\n  const v = item.json;\n  const diasTexto = v.dias_restantes === 0 ? \u0027HOY\u0027 : v.dias_restantes === 1 ? \u0027mañana\u0027 : `en ${v.dias_restantes} dias`;\n  const monto = v.moneda === \u0027USD\u0027 ? `U$D ${v.monto}` : `$${Math.round(v.monto).toLocaleString(\u0027es-AR\u0027)}`;\n  msg += `${v.icono} ${v.concepto} — ${monto} — ${diasTexto}\\n`;\n});\nreturn { msg };"
+                                     }
+                  },
+                  {
+                      "id":  "send-venc",
+                      "name":  "Enviar alerta vencimientos",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       880,
+                                       60
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.ycloud.com/v2/whatsapp/messages",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"from\": \"5493815762656\",\n  \"to\": \"5493815762656\",\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.msg) }} }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "pFmujxRRv8RAE6kX",
+                                                                 "name":  "YCloud  Cuenta"
+                                                             }
+                                      }
+                  },
+                  {
+                      "id":  "query-resumen-lunes",
+                      "name":  "Resumen semanal BD",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       -80,
+                                       320
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT * FROM finanzas_personales.vista_resumen_completo;"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "armar-resumen",
+                      "name":  "Armar resumen semanal",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       320
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const d = $input.first().json;\nconst fmt = n =\u003e Math.round(n || 0).toLocaleString(\u0027es-AR\u0027);\nconst pct = (g, t) =\u003e t \u003e 0 ? Math.round(g / t * 100) : 0;\n\nlet msg = `📊 *RESUMEN SEMANAL*\\n\\n`;\nmsg += `💵 U$D ${d.ingreso_usd || 0} → $${fmt(d.ingreso_ars)} (TC: $${fmt(d.tipo_cambio)})\\n\\n`;\nmsg += `🏠 Necesidades  $${fmt(d.gastado_necesidades)} / $${fmt(d.presupuesto_necesidades)} — ${pct(d.gastado_necesidades, d.presupuesto_necesidades)}%\\n`;\nmsg += `🎯 Deseos       $${fmt(d.gastado_deseos)} / $${fmt(d.presupuesto_deseos)} — ${pct(d.gastado_deseos, d.presupuesto_deseos)}%\\n`;\nmsg += `💳 Compromisos TC: $${fmt(d.compromisos_tc)}\\n\\n`;\nmsg += `✅ Disponible: $${fmt(d.disponible_para_gastar)}`;\nreturn { msg };"
+                                     }
+                  },
+                  {
+                      "id":  "send-resumen",
+                      "name":  "Enviar resumen semanal",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       400,
+                                       320
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.ycloud.com/v2/whatsapp/messages",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"from\": \"5493815762656\",\n  \"to\": \"5493815762656\",\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.msg) }} }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "pFmujxRRv8RAE6kX",
+                                                                 "name":  "YCloud  Cuenta"
+                                                             }
+                                      }
+                  },
+                  {
+                      "id":  "cierre-bd",
+                      "name":  "Cierre mensual BD",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       -80,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "UPDATE finanzas_personales.presupuesto_mensual\nSET mes_cerrado = true\nWHERE anio_mes = TO_CHAR((CURRENT_DATE - INTERVAL \u00271 month\u0027), \u0027YYYY-MM\u0027)\n  AND mes_cerrado = false\nRETURNING anio_mes, ingreso_total_ars, gastado_necesidades, gastado_deseos, ahorro_real, disponible_para_gastar;"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "prep-mes",
+                      "name":  "Preparar mes siguiente",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       160,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "INSERT INTO finanzas_personales.presupuesto_mensual\n  (anio_mes, ingreso_total_usd, ingreso_total_ars, tipo_cambio, presupuesto_necesidades, presupuesto_deseos, presupuesto_ahorro, gastado_necesidades, gastado_deseos, ahorro_real, compromisos_tc, disponible_para_gastar, mes_cerrado)\nSELECT\n  TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027),\n  i.monto,\n  ROUND(i.monto * tc.dolar_blue),\n  tc.dolar_blue,\n  ROUND(i.monto * tc.dolar_blue * c.regla_necesidades_pct / 100),\n  ROUND(i.monto * tc.dolar_blue * c.regla_deseos_pct / 100),\n  ROUND(i.monto * tc.dolar_blue * c.regla_ahorro_pct / 100),\n  0, 0, 0,\n  COALESCE((SELECT SUM(monto_cuota) FROM finanzas_personales.compromisos_tarjeta WHERE activo = true AND fecha_inicio \u003c= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) AND fecha_fin \u003e= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)), 0),\n  ROUND(i.monto * tc.dolar_blue * c.regla_deseos_pct / 100),\n  false\nFROM finanzas_personales.ingresos i, finanzas_personales.configuracion c,\n  (SELECT dolar_blue FROM finanzas_personales.tipo_cambio ORDER BY fecha DESC LIMIT 1) tc\nWHERE i.activo = true\nON CONFLICT (anio_mes) DO NOTHING\nRETURNING anio_mes;"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "avanzar-cuotas",
+                      "name":  "Avanzar cuotas TC",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       400,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "UPDATE finanzas_personales.compromisos_tarjeta\nSET cuota_actual = cuota_actual + 1,\n    activo = CASE WHEN cuota_actual + 1 \u003e= total_cuotas THEN false ELSE true END,\n    actualizado_en = NOW()\nWHERE activo = true AND fecha_inicio \u003c= DATE_TRUNC(\u0027month\u0027, CURRENT_DATE)::date\nRETURNING id, descripcion, cuota_actual, total_cuotas, activo;"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "armar-cierre",
+                      "name":  "Armar mensaje cierre",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       640,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const cierre = $(\u0027Cierre mensual BD\u0027).first().json;\nconst fmt = n =\u003e Math.round(n || 0).toLocaleString(\u0027es-AR\u0027);\nlet msg = `🗓️ *CIERRE MENSUAL — ${cierre.anio_mes || \u0027\u0027}*\\n\\n`;\nmsg += `💵 Ingreso: $${fmt(cierre.ingreso_total_ars)}\\n`;\nmsg += `🏠 Necesidades: $${fmt(cierre.gastado_necesidades)}\\n`;\nmsg += `🎯 Deseos: $${fmt(cierre.gastado_deseos)}\\n`;\nmsg += `💚 Ahorro real: $${fmt(cierre.ahorro_real)}\\n`;\nmsg += `✅ Sobrante: $${fmt(cierre.disponible_para_gastar)}\\n\\n`;\nmsg += \u0027📅 Mes siguiente preparado. Cuotas actualizadas.\u0027;\nreturn { msg };"
+                                     }
+                  },
+                  {
+                      "id":  "send-cierre",
+                      "name":  "Enviar cierre mensual",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       880,
+                                       500
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.ycloud.com/v2/whatsapp/messages",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"from\": \"5493815762656\",\n  \"to\": \"5493815762656\",\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.msg) }} }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "pFmujxRRv8RAE6kX",
+                                                                 "name":  "YCloud  Cuenta"
+                                                             }
+                                      }
+                  },
+                  {
+                      "id":  "query-liquidacion",
+                      "name":  "Consultar liquidacion",
+                      "type":  "n8n-nodes-base.postgres",
+                      "typeVersion":  2.6,
+                      "position":  [
+                                       -80,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "operation":  "executeQuery",
+                                         "query":  "SELECT pm.ingreso_total_ars, pm.ingreso_total_usd, pm.tipo_cambio,\n  ROUND(pm.ingreso_total_ars * 0.10) AS reserva_tc,\n  COALESCE((SELECT SUM(monto_cuota) FROM finanzas_personales.compromisos_tarjeta WHERE activo = true AND fecha_inicio \u003c= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027 - INTERVAL \u00271 day\u0027)::date AND fecha_fin \u003e= (DATE_TRUNC(\u0027month\u0027, CURRENT_DATE) + INTERVAL \u00271 month\u0027)::date), 0) AS total_tarjetas_mes_siguiente,\n  CASE EXTRACT(MONTH FROM CURRENT_DATE + INTERVAL \u00271 month\u0027)::int WHEN 1 THEN \u0027Enero\u0027 WHEN 2 THEN \u0027Febrero\u0027 WHEN 3 THEN \u0027Marzo\u0027 WHEN 4 THEN \u0027Abril\u0027 WHEN 5 THEN \u0027Mayo\u0027 WHEN 6 THEN \u0027Junio\u0027 WHEN 7 THEN \u0027Julio\u0027 WHEN 8 THEN \u0027Agosto\u0027 WHEN 9 THEN \u0027Septiembre\u0027 WHEN 10 THEN \u0027Octubre\u0027 WHEN 11 THEN \u0027Noviembre\u0027 WHEN 12 THEN \u0027Diciembre\u0027 END AS mes_siguiente\nFROM finanzas_personales.presupuesto_mensual pm WHERE pm.anio_mes = TO_CHAR(CURRENT_DATE, \u0027YYYY-MM\u0027);"
+                                     },
+                      "credentials":  {
+                                          "postgres":  {
+                                                           "id":  "c5vJmoXD1JooCpKG",
+                                                           "name":  "BD Supabase"
+                                                       }
+                                      }
+                  },
+                  {
+                      "id":  "armar-liquidacion",
+                      "name":  "Armar recordatorio liquidacion",
+                      "type":  "n8n-nodes-base.code",
+                      "typeVersion":  2,
+                      "position":  [
+                                       160,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "jsCode":  "const d = $input.first().json;\nconst fmt = n =\u003e Math.round(n || 0).toLocaleString(\u0027es-AR\u0027);\nconst reserva = Math.max(d.reserva_tc || 0, d.total_tarjetas_mes_siguiente || 0);\nlet msg = `💪 *LIQUIDACION — DIA 25*\\n\\n`;\nmsg += `Es dia 25. Ya deberia haber entrado el sueldo.\\n\\n`;\nmsg += `📋 *Que hacer:*\\n`;\nmsg += `1️⃣ Verificar que entro el sueldo\\n`;\nmsg += `2️⃣ Apartar reserva para tarjetas\\n\\n`;\nmsg += `💳 Tarjetas ${d.mes_siguiente}: *$${fmt(d.total_tarjetas_mes_siguiente)}*\\n`;\nmsg += `🛡️ Reserva sugerida (10%): *$${fmt(d.reserva_tc)}*\\n\\n`;\nmsg += `📲 Transferir a IEB+: \\`luismolina.ieb\\`\\nMonto: *$${fmt(reserva)}*`;\nreturn { msg };"
+                                     }
+                  },
+                  {
+                      "id":  "send-liquidacion",
+                      "name":  "Enviar liquidacion",
+                      "type":  "n8n-nodes-base.httpRequest",
+                      "typeVersion":  4.2,
+                      "position":  [
+                                       400,
+                                       680
+                                   ],
+                      "parameters":  {
+                                         "method":  "POST",
+                                         "url":  "https://api.ycloud.com/v2/whatsapp/messages",
+                                         "authentication":  "genericCredentialType",
+                                         "genericAuthType":  "httpHeaderAuth",
+                                         "sendHeaders":  true,
+                                         "headerParameters":  {
+                                                                  "parameters":  [
+                                                                                     {
+                                                                                         "name":  "Content-Type",
+                                                                                         "value":  "application/json"
+                                                                                     }
+                                                                                 ]
+                                                              },
+                                         "sendBody":  true,
+                                         "specifyBody":  "json",
+                                         "jsonBody":  "={\n  \"from\": \"5493815762656\",\n  \"to\": \"5493815762656\",\n  \"type\": \"text\",\n  \"text\": { \"body\": {{ JSON.stringify($json.msg) }} }\n}",
+                                         "options":  {
+
+                                                     }
+                                     },
+                      "credentials":  {
+                                          "httpHeaderAuth":  {
+                                                                 "id":  "pFmujxRRv8RAE6kX",
+                                                                 "name":  "YCloud  Cuenta"
+                                                             }
+                                      }
+                  }
+              ],
+    "connections":  {
+                        "Schedule":  {
+                                         "main":  [
+                                                      [
+                                                          {
+                                                              "node":  "Que hacer hoy",
+                                                              "type":  "main",
+                                                              "index":  0
+                                                          }
+                                                      ]
+                                                  ]
+                                     },
+                        "Que hacer hoy":  {
+                                              "main":  [
+                                                           [
+                                                               {
+                                                                   "node":  "Fetch Tipo de Cambio",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Resumen semanal BD",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Consultar liquidacion",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ],
+                                                           [
+                                                               {
+                                                                   "node":  "Cierre mensual BD",
+                                                                   "type":  "main",
+                                                                   "index":  0
+                                                               }
+                                                           ]
+                                                       ]
+                                          },
+                        "Fetch Tipo de Cambio":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Guardar TC",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Guardar TC":  {
+                                           "main":  [
+                                                        [
+                                                            {
+                                                                "node":  "Consultar Vencimientos",
+                                                                "type":  "main",
+                                                                "index":  0
+                                                            }
+                                                        ]
+                                                    ]
+                                       },
+                        "Consultar Vencimientos":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Hay vencimientos?",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Hay vencimientos?":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Armar alerta vencimientos",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ],
+                                                               [
+
+                                                               ]
+                                                           ]
+                                              },
+                        "Armar alerta vencimientos":  {
+                                                          "main":  [
+                                                                       [
+                                                                           {
+                                                                               "node":  "Enviar alerta vencimientos",
+                                                                               "type":  "main",
+                                                                               "index":  0
+                                                                           }
+                                                                       ]
+                                                                   ]
+                                                      },
+                        "Resumen semanal BD":  {
+                                                   "main":  [
+                                                                [
+                                                                    {
+                                                                        "node":  "Armar resumen semanal",
+                                                                        "type":  "main",
+                                                                        "index":  0
+                                                                    }
+                                                                ]
+                                                            ]
+                                               },
+                        "Armar resumen semanal":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Enviar resumen semanal",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Cierre mensual BD":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Preparar mes siguiente",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Preparar mes siguiente":  {
+                                                       "main":  [
+                                                                    [
+                                                                        {
+                                                                            "node":  "Avanzar cuotas TC",
+                                                                            "type":  "main",
+                                                                            "index":  0
+                                                                        }
+                                                                    ]
+                                                                ]
+                                                   },
+                        "Avanzar cuotas TC":  {
+                                                  "main":  [
+                                                               [
+                                                                   {
+                                                                       "node":  "Armar mensaje cierre",
+                                                                       "type":  "main",
+                                                                       "index":  0
+                                                                   }
+                                                               ]
+                                                           ]
+                                              },
+                        "Armar mensaje cierre":  {
+                                                     "main":  [
+                                                                  [
+                                                                      {
+                                                                          "node":  "Enviar cierre mensual",
+                                                                          "type":  "main",
+                                                                          "index":  0
+                                                                      }
+                                                                  ]
+                                                              ]
+                                                 },
+                        "Consultar liquidacion":  {
+                                                      "main":  [
+                                                                   [
+                                                                       {
+                                                                           "node":  "Armar recordatorio liquidacion",
+                                                                           "type":  "main",
+                                                                           "index":  0
+                                                                       }
+                                                                   ]
+                                                               ]
+                                                  },
+                        "Armar recordatorio liquidacion":  {
+                                                               "main":  [
+                                                                            [
+                                                                                {
+                                                                                    "node":  "Enviar liquidacion",
+                                                                                    "type":  "main",
+                                                                                    "index":  0
+                                                                                }
+                                                                            ]
+                                                                        ]
+                                                           }
+                    },
+    "settings":  {
+                     "executionOrder":  "v1",
+                     "timezone":  "America/Argentina/Buenos_Aires",
+                     "callerPolicy":  "workflowsFromSameOwner",
+                     "availableInMCP":  true
+                 },
+    "pinData":  null,
+    "versionId":  "9652fd18-5dcf-4ce4-8465-816bc76685e6",
+    "_meta":  {
+                  "exportedAt":  "2026-04-20",
+                  "n8nVersion":  "your-n8n-instance.example.com"
+              }
+}
