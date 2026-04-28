@@ -1,4 +1,16 @@
-.env 
-.env.* 
-node_modules/ 
+.env
+.env.*
+node_modules/
 .claude/settings.local.json
+
+# Documentos sensibles — nunca commitear
+*.pdf
+*.xlsx
+*.xls
+*.csv
+
+# OS / editor
+.DS_Store
+Thumbs.db
+.vscode/
+.idea/
