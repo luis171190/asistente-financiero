@@ -1,4 +1,11 @@
-.env 
-.env.* 
-node_modules/ 
+.env
+.env.*
+node_modules/
 .claude/settings.local.json
+
+# Documentos personales / financieros
+*.pdf
+*.xlsx
+*.xls
+*.docx
+*.txt
