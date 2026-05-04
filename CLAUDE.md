@@ -1,5 +1,10 @@
 # Asistente Financiero Personal
 
+## ⚠️ CONTEXTO ACTUAL (2026-05-01)
+Luis SIN TRABAJO desde Abril 2026 (en busqueda activa).
+**Modo del sistema: SOLO REGISTRO DE GASTOS** — no asumir ingresos, presupuestos ni cronogramas de cobro.
+El bot financiero NO debe sugerir nada relacionado con sueldo o liquidacion hasta nuevo aviso.
+
 ## Descripcion
 Sistema de finanzas personales basado en n8n con AI Agent (OpenAI GPT-4.1)
 y notificaciones WhatsApp via YCloud API.
