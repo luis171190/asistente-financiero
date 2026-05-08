@@ -64,7 +64,7 @@
     {
       "parameters": {
         "method": "POST",
-        "url": "https://your-n8n-instance.example.com/webhook/WA-respuesta-somos",
+        "url": "https://your-n8n-instance.example.com/webhook/WA-respuesta-secondary",
         "sendBody": true,
         "specifyBody": "json",
         "jsonBody": "={{ JSON.stringify($json.body) }}",
@@ -74,11 +74,11 @@
       "typeVersion": 4.2,
       "position": [384, 384],
       "id": "5b0daf88-69bd-4bf2-8d28-eefca81a005f",
-      "name": "→ Somos"
+      "name": "→ Secondary Flow"
     },
     {
       "parameters": {
-        "content": "## 🔀 Router WhatsApp\n\nRecibe TODOS los mensajes de Evolution API.\nRedirige según el remitente:\n\n📱 Luis (54XXXXXXXXXX) → Asistente Financiero\n📱 Cualquier otro → Somos (WA-respuesta-somos)\n\n⚠️ Configurar en Evolution API:\nURL: https://your-n8n-instance.example.com/webhook/router-wa\nEvento: messages.upsert",
+        "content": "## 🔀 Router WhatsApp\n\nRecibe TODOS los mensajes de Evolution API.\nRedirige según el remitente:\n\n📱 Luis (54XXXXXXXXXX) → Asistente Financiero\n📱 Cualquier otro → Secondary Flow (otro caso de uso)\n\n⚠️ Configurar en Evolution API:\nURL: https://your-n8n-instance.example.com/webhook/router-wa\nEvento: messages.upsert",
         "height": 280,
         "width": 380,
         "color": 6
@@ -99,7 +99,7 @@
     "¿Es Luis?": {
       "main": [
         [{ "node": "→ Asistente Financiero", "type": "main", "index": 0 }],
-        [{ "node": "→ Somos", "type": "main", "index": 0 }]
+        [{ "node": "→ Secondary Flow", "type": "main", "index": 0 }]
       ]
     }
   },
