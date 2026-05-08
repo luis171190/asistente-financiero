@@ -1,4 +1,34 @@
-.env 
-.env.* 
-node_modules/ 
+# Credentials & secrets
+.env
+.env.*
+!.env.example
+*.key
+*.pem
+credentials.json
+secrets.json
+
+# Dependencies
+node_modules/
+__pycache__/
+venv/
+.venv/
+
+# Build / artifacts
+dist/
+build/
+*.log
+
+# IDE / OS
+.vscode/
+.idea/
+.DS_Store
+Thumbs.db
+
+# Datos personales / privados
+Resumen de Gastos*.xlsx
+*-personal.*
+notas-internas/
+
+# Claude Code local config
 .claude/settings.local.json
+.claude/projects/
